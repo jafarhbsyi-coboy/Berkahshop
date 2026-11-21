@@ -151,7 +151,61 @@ return `<div class="cart-item">
 document.getElementById("total").textContent=rupiah(total);
 }
 
+
 function checkout(){
+
+  if(cart.length===0){
+    alert("Keranjang masih kosong!");
+    return;
+  }
+
+  const nama = prompt("Masukkan nama lengkap Anda:");
+  if(!nama || !nama.trim()) return;
+
+  const telepon = prompt("Masukkan nomor HP Anda:");
+  if(!telepon || !telepon.trim()) return;
+
+  const alamat = prompt("Masukkan alamat lengkap pengiriman:");
+  if(!alamat || !alamat.trim()) return;
+
+  let total = 0;
+
+  const daftar = cart.map(item => {
+    const p = products.find(x => x.id === item.id);
+    if(!p) return "";
+
+    const subtotal = p.price * item.qty;
+    total += subtotal;
+
+    return `- ${p.name} x ${item.qty} = ${rupiah(subtotal)}`;
+  }).filter(Boolean).join("\n");
+
+  const pesan =
+`HALO ADMIN BERKAHSHOP
+
+Saya ingin memesan produk:
+
+Nama: ${nama}
+Nomor HP: ${telepon}
+Alamat: ${alamat}
+
+DAFTAR PESANAN:
+${daftar}
+
+TOTAL PEMBELIAN: ${rupiah(total)}
+
+Mohon konfirmasi pesanan dan biaya pengiriman saya.
+
+Terima kasih.
+Pelanggan Berkahshop`;
+
+  const url =
+  "https://wa.me/6281991391551?text=" +
+  encodeURIComponent(pesan);
+
+  window.location.href = url;
+}
+
 if(cart.length===0){
 alert("Keranjang masih kosong!");
 return;
