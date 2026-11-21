@@ -206,12 +206,19 @@ Pelanggan Berkahshop`;
   window.location.href = url;
 }
 
-if(cart.length===0){
-alert("Keranjang masih kosong!");
-return;
+  const url =
+  "https://wa.me/6281991391551?text=" +
+  encodeURIComponent(pesan);
+
+  window.location.href = url;
 }
-alert("Keranjang Berkahshop siap diproses. Sistem pembayaran akan kita bangun pada tahap berikutnya.");
-}
+
+renderProducts();
+renderCart();
+
+</script>
+</body>
+</html>
 
 renderProducts();
 renderCart();
