@@ -1,0 +1,166 @@
+
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Berkahshop - Marketplace</title>
+<style>
+*{box-sizing:border-box}
+body{margin:0;font-family:Arial,sans-serif;background:#f4f6f9;color:#222}
+header{background:#087b50;color:white;padding:20px;text-align:center}
+header h1{margin:0;font-size:30px}
+header p{margin:7px 0}
+.search{padding:15px;max-width:700px;margin:auto}
+input{width:100%;padding:13px;border:1px solid #ddd;border-radius:9px;font-size:16px}
+nav{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;padding:5px 12px}
+nav button{background:white;border:1px solid #ddd;padding:10px 14px;border-radius:20px}
+.container{max-width:1050px;margin:auto;padding:15px}
+h2{font-size:21px}
+.products{display:grid;grid-template-columns:repeat(2,1fr);gap:13px}
+.product{background:white;padding:12px;border-radius:12px;box-shadow:0 2px 8px #ddd}
+.picture{height:115px;background:#e9f5ee;border-radius:9px;display:grid;place-items:center;font-size:55px}
+.product h3{font-size:16px;margin:10px 0 5px}
+.price{color:#07844e;font-weight:bold}
+.product button,.checkout{
+width:100%;padding:11px;border:0;border-radius:8px;
+background:#087b50;color:white;font-weight:bold;margin-top:10px
+}
+.cart{background:white;padding:15px;margin-top:22px;border-radius:12px}
+.cart-item{display:flex;justify-content:space-between;gap:8px;padding:9px 0;border-bottom:1px solid #eee}
+.cart-item button{padding:4px 9px}
+footer{text-align:center;padding:25px;color:#666}
+@media(min-width:650px){
+.products{grid-template-columns:repeat(4,1fr)}
+}
+</style>
+</head>
+<body>
+
+<header>
+<h1>🛍️ Berkahshop</h1>
+<p>Marketplace Belanja Hemat dan Berkah</p>
+<p>Temukan berbagai produk pilihan Anda!</p>
+</header>
+
+<div class="search">
+<input id="search" placeholder="Cari produk di Berkahshop..."
+oninput="renderProducts()">
+</div>
+
+<nav>
+<button onclick="setCategory('Semua')">Semua</button>
+<button onclick="setCategory('Elektronik')">Elektronik</button>
+<button onclick="setCategory('Fashion')">Fashion</button>
+<button onclick="setCategory('Makanan')">Makanan</button>
+<button onclick="setCategory('Rumah')">Rumah</button>
+</nav>
+
+<main class="container">
+<h2>🔥 Produk Pilihan</h2>
+<div class="products" id="products"></div>
+
+<section class="cart">
+<h2>🛒 Keranjang (<span id="count">0</span>)</h2>
+<div id="cartItems">Keranjang masih kosong.</div>
+<h3>Total: <span id="total">Rp0</span></h3>
+<button class="checkout" onclick="checkout()">Checkout</button>
+</section>
+</main>
+
+<footer>
+<p>© 2026 Berkahshop</p>
+<p>Belanja mudah, aman, dan nyaman.</p>
+</footer>
+
+<script>
+const products=[
+{id:1,name:"Smartphone",price:1500000,cat:"Elektronik",emoji:"📱"},
+{id:2,name:"Headphone",price:150000,cat:"Elektronik",emoji:"🎧"},
+{id:3,name:"Sepatu",price:125000,cat:"Fashion",emoji:"👟"},
+{id:4,name:"Tas",price:85000,cat:"Fashion",emoji:"🎒"},
+{id:5,name:"Kopi Jahe",price:5000,cat:"Makanan",emoji:"☕"},
+{id:6,name:"Minyak Wangi",price:25000,cat:"Fashion",emoji:"🧴"},
+{id:7,name:"Peralatan Dapur",price:45000,cat:"Rumah",emoji:"🍳"},
+{id:8,name:"Lampu LED",price:30000,cat:"Rumah",emoji:"💡"}
+];
+
+let cart=JSON.parse(localStorage.getItem("berkahCart")||"[]");
+let category="Semua";
+
+function rupiah(n){
+return "Rp"+n.toLocaleString("id-ID");
+}
+
+function setCategory(c){
+category=c;
+renderProducts();
+}
+
+function renderProducts(){
+let q=document.getElementById("search").value.toLowerCase();
+let list=products.filter(p=>
+(category==="Semua"||p.cat===category)&&
+p.name.toLowerCase().includes(q)
+);
+document.getElementById("products").innerHTML=list.map(p=>`
+<div class="product">
+<div class="picture">${p.emoji}</div>
+<h3>${p.name}</h3>
+<p class="price">${rupiah(p.price)}</p>
+<small>${p.cat}</small>
+<button onclick="addCart(${p.id})">+ Keranjang</button>
+</div>`).join("")||"Produk tidak ditemukan.";
+}
+
+function addCart(id){
+let item=cart.find(x=>x.id===id);
+if(item)item.qty++;
+else cart.push({id,qty:1});
+saveCart();
+}
+
+function saveCart(){
+localStorage.setItem("berkahCart",JSON.stringify(cart));
+renderCart();
+}
+
+function changeQty(id,amount){
+let item=cart.find(x=>x.id===id);
+if(item)item.qty+=amount;
+cart=cart.filter(x=>x.qty>0);
+saveCart();
+}
+
+function renderCart(){
+let count=cart.reduce((s,x)=>s+x.qty,0);
+let total=0;
+document.getElementById("count").textContent=count;
+document.getElementById("cartItems").innerHTML=
+cart.map(x=>{
+let p=products.find(y=>y.id===x.id);
+total+=p.price*x.qty;
+return `<div class="cart-item">
+<span>${p.name}<br>${rupiah(p.price)} × ${x.qty}</span>
+<span>
+<button onclick="changeQty(${p.id},-1)">−</button>
+<button onclick="changeQty(${p.id},1)">+</button>
+</span>
+</div>`;
+}).join("")||"Keranjang masih kosong.";
+document.getElementById("total").textContent=rupiah(total);
+}
+
+function checkout(){
+if(cart.length===0){
+alert("Keranjang masih kosong!");
+return;
+}
+alert("Keranjang Berkahshop siap diproses. Sistem pembayaran akan kita bangun pada tahap berikutnya.");
+}
+
+renderProducts();
+renderCart();
+</script>
+</body>
+</html>
