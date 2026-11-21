@@ -4,7 +4,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Berkahshop - Marketplace</title>
+<title>Berkahshop - Marketplace-Tempat Belanja kita semua</title>
 <style>
 *{box-sizing:border-box}
 body{
@@ -265,5 +265,21 @@ function checkout(){
 renderProducts();
 renderCart();
 </script>
+
+<!-- Koneksi Supabase Berkahshop -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+<script>
+const SUPABASE_URL = "https://cauhaaqyriklxlofqsvc.supabase.co/rest/v1/";
+const SUPABASE_KEY = "sb_publishable_zEWRBwZiW5G-7CDrjfqDPQ_kAtJthh0";
+
+const supabaseClient = window.supabase.createClient(
+  SUPABASE_URL,
+  SUPABASE_KEY
+);
+
+console.log("Supabase Berkahshop berhasil diinisialisasi");
+</script>
+
 </body>
 </html>
