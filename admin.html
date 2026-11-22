@@ -20,34 +20,6 @@ img{max-width:90px;max-height:90px;object-fit:cover}
 </style>
 </head>
 <body>
-<script type="module">
-import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm";
-
-const supabase = createClient(
-  "https://cauhaaqyriklxlofqsvc.supabase.co/rest/v1/";
-  ""sb_publishable_zEWRBwZiW5G-7CDrjfqDPQ_kAtJthh0";
-);
-
-window.loginAdmin = async function () {
-  const email = document.getElementById("email").value;
-  const password = document.getElementById("password").value;
-  const message = document.getElementById("message");
-
-  message.textContent = "Sedang masuk...";
-
-  const { data, error } = await supabase.auth.signInWithPassword({
-    email,
-    password
-  });
-
-  if (error) {
-    message.textContent = "Login gagal: " + error.message;
-    return;
-  }
-
-  message.textContent = "Login berhasil!";
-};
-</script>
 <main>
 <h1>Admin Berkahshop</h1> 
 
@@ -239,6 +211,34 @@ async function checkSession(){
 }
 
 checkSession();
+</script>
+<script type="module">
+import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm";
+
+const supabase = createClient(
+  "https://cauhaaqyriklxlofqsvc.supabase.co/rest/v1/";
+  ""sb_publishable_zEWRBwZiW5G-7CDrjfqDPQ_kAtJthh0";
+);
+
+window.loginAdmin = async function () {
+  const email = document.getElementById("email").value;
+  const password = document.getElementById("password").value;
+  const message = document.getElementById("message");
+
+  message.textContent = "Sedang masuk...";
+
+  const { data, error } = await supabase.auth.signInWithPassword({
+    email,
+    password
+  });
+
+  if (error) {
+    message.textContent = "Login gagal: " + error.message;
+    return;
+  }
+
+  message.textContent = "Login berhasil!";
+};
 </script>
 </body>
 </html>
