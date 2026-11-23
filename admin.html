@@ -233,7 +233,11 @@ const db = supabase.createClient(
 
 async function loginAdmin() {
   const email = document.getElementById("email").value;
-  const password = document.getElementById("password").value;
+  const password = 
+</script>;
+}
+</script>
+document.getElementById("password").value;
 
   const { data, error } = await db.auth.signInWithPassword({
     email: email,
@@ -247,8 +251,5 @@ async function loginAdmin() {
 
   alert("Alhamdulillah! Login Supabase berhasil.");
 }
-</script>;
-}
-</script>
 </body>
 </html> 
