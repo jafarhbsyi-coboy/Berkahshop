@@ -1,45 +1,63 @@
-ia
+
 <!DOCTYPE html>
 <html lang="id">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Admin Berkahshop</title>
+
 <style>
-body{font-family:Arial;background:#f4f4f4;margin:0;padding:20px;color:#222}
+body{
+  font-family:Arial,sans-serif;
+  background:#f4f4f4;
+  margin:0;padding:20px;color:#222
+}
 main{max-width:650px;margin:auto}
-.box{background:white;padding:20px;border-radius:12px;margin-bottom:18px}
+.box{
+  background:white;padding:20px;
+  border-radius:12px;margin-bottom:18px
+}
 h1{color:#673ab7}
-input,button{width:100%;padding:12px;margin:7px 0;box-sizing:border-box;border-radius:7px}
+input,button{
+  width:100%;padding:12px;margin:7px 0;
+  box-sizing:border-box;border-radius:7px
+}
 input{border:1px solid #ccc}
-button{background:#673ab7;color:white;border:0;cursor:pointer}
+button{
+  background:#673ab7;color:white;
+  border:0;cursor:pointer
+}
+button:disabled{opacity:.6;cursor:wait}
 .danger{background:#d32f2f}
 .product{padding:12px;border-bottom:1px solid #ddd}
 img{max-width:90px;max-height:90px;object-fit:cover}
 #panel{display:none}
+#message{overflow-wrap:anywhere}
 </style>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
+
 <body>
 <main>
-<h1>Admin Berkahshop</h1> 
+<h1>Admin Berkahshop</h1>
 
 <section class="box" id="login">
 <h2>Login Admin</h2>
+
 <input id="email" type="email" placeholder="Email admin">
 <input id="password" type="password" placeholder="Password">
-<button type="button" onclick="loginAdmin()">
-  MASUK
-</button>">
-Masuk
-</button>
+
+<button type="button" id="btnLogin">MASUK</button>
 <p id="message"></p>
 </section>
 
 <section class="box" id="panel">
 <h2>Pengelolaan Produk</h2>
-<button onclick="logoutAdmin()">Keluar</button>
+<button type="button" id="btnLogout">Keluar</button>
 
 <h3>Tambah / Edit Produk</h3>
+
 <input id="productId" type="hidden">
 <input id="name" placeholder="Nama produk">
 <input id="price" type="number" placeholder="Harga">
@@ -48,194 +66,283 @@ Masuk
 <input id="image" placeholder="URL foto produk">
 <input id="description" placeholder="Deskripsi produk">
 
-<button onclick="saveProduct()">Simpan Produk</button>
-<button onclick="resetForm()">Kosongkan Form</button>
+<button type="button" id="btnSave">Simpan Produk</button>
+<button type="button" id="btnReset">Kosongkan Form</button>
 
 <h3>Daftar Produk</h3>
-<div id="productList"></div>
+<div id="productList">Memuat produk...</div>
 </section>
 </main>
 
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
-const SUPABASE_URL = "https://cauhaaqyriklxlofqsvc.supabase.co";
-const SUPABASE_KEY = "sb_publishable_zEWRBwZiW5G-7CDrjfqDPQ_kAtJthh0";
+const SUPABASE_URL =
+"https://cauhaaqyriklxlofqsvc.supabase.co";
+
+const SUPABASE_KEY =
+"sb_publishable_zEWRBwZiW5G-7CDrjfqDPQ_kAtJthh0";
 
 const db = window.supabase.createClient(
   SUPABASE_URL,
   SUPABASE_KEY
 );
 
+const $ = id => document.getElementById(id);
+
+function showMessage(text){
+  $("message").textContent = text;
+}
+
 function escapeHTML(value){
-  return String(value ?? "").replace(/[&<>"']/g, c => ({
-    "&":"&amp;","<":"&lt;",">":"&gt;",
-    '"':"&quot;","'":"&#39;"
+  return String(value ?? "").replace(/[&<>"']/g,c=>({
+    "&":"&amp;",
+    "<":"&lt;",
+    ">":"&gt;",
+    '"':"&quot;",
+    "'":"&#39;"
   })[c]);
 }
 
-async function loginAdmin(){
-  const email=document.getElementById("email").value;
-  const password=document.getElementById("password").value;
-  const message=document.getElementById("message");
+async function verifyAdmin(){
+  const {data,error} = await db.rpc("is_admin");
 
-  message.textContent="Memeriksa akun...";
-
-  const {data,error}=await db.auth.signInWithPassword({
-    email,password
-  });
-
-  if(error){
-    message.textContent="Login gagal: "+error.message;
-    return;
-  }
-
-  const {data:isAdmin,error:adminError}=await db.rpc("is_admin");
-
-  if(adminError || isAdmin !== true){
+  if(error || data !== true){
     await db.auth.signOut();
-    message.textContent="Akun ini bukan admin.";
+    throw new Error("Akun ini bukan admin Berkahshop.");
+  }
+
+  return true;
+}
+
+async function loginAdmin(){
+  const email = $("email").value.trim();
+  const password = $("password").value;
+  const button = $("btnLogin");
+
+  if(!email || !password){
+    showMessage("Email dan password wajib diisi.");
     return;
   }
 
-  document.getElementById("login").style.display="none";
-  document.getElementById("panel").style.display="block";
-  loadProducts();
+  button.disabled = true;
+  showMessage("Sedang memeriksa login...");
+
+  try{
+    const {data,error} = await db.auth.signInWithPassword({
+      email:email,
+      password:password
+    });
+
+    if(error) throw error;
+
+    await verifyAdmin();
+
+    $("login").style.display = "none";
+    $("panel").style.display = "block";
+
+    await loadProducts();
+
+  }catch(error){
+    showMessage("Login gagal: " + error.message);
+  }finally{
+    button.disabled = false;
+  }
 }
 
 async function logoutAdmin(){
-  await db.auth.signOut();
-  location.reload();
-}
-
-async function loadProducts(){
-  const {data,error}=await db
-    .from("products")
-    .select("*")
-    .order("id",{ascending:false});
+  const {error} = await db.auth.signOut();
 
   if(error){
     alert(error.message);
     return;
   }
 
-  document.getElementById("productList").innerHTML=
-  data.map(p=>`
-    <div class="product">
-      <b>${escapeHTML(p.name)}</b><br>
-      Harga: Rp${Number(p.price).toLocaleString("id-ID")}<br>
-      Stok: ${p.stock}<br>
-      ${p.image_url ? `<img src="${escapeHTML(p.image_url)}" alt="Foto produk">` : ""}
-      <button onclick="editProduct(${p.id})">Edit</button>
-      <button class="danger" onclick="deleteProduct(${p.id})">Hapus</button>
-    </div>
-  `).join("");
+  location.reload();
+}
+
+async function loadProducts(){
+  $("productList").textContent = "Memuat produk...";
+
+  const {data,error} = await db
+    .from("products")
+    .select("*")
+    .order("id",{ascending:false});
+
+  if(error){
+    $("productList").textContent =
+      "Gagal memuat produk: " + error.message;
+    return;
+  }
+
+  if(!data || data.length === 0){
+    $("productList").textContent = "Belum ada produk.";
+    return;
+  }
+
+  $("productList").innerHTML = data.map(p=>{
+    const imageURL = String(p.image_url || "");
+
+    const safeImage = /^https?:\/\//i.test(imageURL)
+      ? `<img src="${escapeHTML(imageURL)}" alt="Foto produk">`
+      : "";
+
+    return `
+      <div class="product">
+        <b>${escapeHTML(p.name)}</b><br>
+        Harga: Rp${Number(p.price).toLocaleString("id-ID")}<br>
+        Kategori: ${escapeHTML(p.category || "-")}<br>
+        Stok: ${escapeHTML(p.stock)}<br>
+        ${safeImage}
+        <button type="button" data-edit="${escapeHTML(p.id)}">
+          Edit
+        </button>
+        <button type="button" class="danger"
+          data-delete="${escapeHTML(p.id)}">
+          Hapus
+        </button>
+      </div>
+    `;
+  }).join("");
 }
 
 async function saveProduct(){
-  const id=document.getElementById("productId").value;
+  const id = $("productId").value;
 
-  const product={
-    name:document.getElementById("name").value.trim(),
-    price:Number(document.getElementById("price").value),
-    category:document.getElementById("category").value.trim(),
-    stock:Number(document.getElementById("stock").value),
-    image_url:document.getElementById("image").value.trim() || null,
-    description:document.getElementById("description").value.trim()
+  const product = {
+    name:$("name").value.trim(),
+    price:Number($("price").value),
+    category:$("category").value.trim(),
+    stock:Number($("stock").value),
+    image_url:$("image").value.trim() || null,
+    description:$("description").value.trim()
   };
 
-  if(!product.name || !Number.isFinite(product.price) ||
-     product.price < 0 || !Number.isInteger(product.stock) ||
-     product.stock < 0){
+  if(
+    !product.name ||
+    $("price").value === "" ||
+    !Number.isFinite(product.price) ||
+    product.price < 0 ||
+    $("stock").value === "" ||
+    !Number.isInteger(product.stock) ||
+    product.stock < 0
+  ){
     alert("Periksa nama, harga, dan stok produk.");
     return;
   }
 
-  const result=id
-    ? await db.from("products").update(product).eq("id",id)
-    : await db.from("products").insert(product);
-
-  if(result.error){
-    alert("Gagal: "+result.error.message);
+  if(product.image_url &&
+     !/^https?:\/\//i.test(product.image_url)){
+    alert("URL foto harus menggunakan http:// atau https://");
     return;
   }
 
-  alert("Produk berhasil disimpan.");
-  resetForm();
-  loadProducts();
+  const button = $("btnSave");
+  button.disabled = true;
+
+  try{
+    const result = id
+      ? await db.from("products").update(product).eq("id",id)
+      : await db.from("products").insert(product);
+
+    if(result.error) throw result.error;
+
+    alert("Produk berhasil disimpan.");
+    resetForm();
+    await loadProducts();
+
+  }catch(error){
+    alert("Gagal menyimpan: " + error.message);
+  }finally{
+    button.disabled = false;
+  }
 }
 
 async function editProduct(id){
-  const {data,error}=await db.from("products")
-    .select("*").eq("id",id).single();
+  const {data,error} = await db
+    .from("products")
+    .select("*")
+    .eq("id",id)
+    .single();
 
-  if(error){alert(error.message);return;}
+  if(error){
+    alert(error.message);
+    return;
+  }
 
-  document.getElementById("productId").value=data.id;
-  document.getElementById("name").value=data.name;
-  document.getElementById("price").value=data.price;
-  document.getElementById("category").value=data.category || "";
-  document.getElementById("stock").value=data.stock;
-  document.getElementById("image").value=data.image_url || "";
-  document.getElementById("description").value=data.description || "";
+  $("productId").value = data.id;
+  $("name").value = data.name || "";
+  $("price").value = data.price ?? "";
+  $("category").value = data.category || "";
+  $("stock").value = data.stock ?? "";
+  $("image").value = data.image_url || "";
+  $("description").value = data.description || "";
 
   window.scrollTo(0,0);
 }
 
 async function deleteProduct(id){
-  if(!confirm("Yakin ingin menghapus produk ini?"))return;
+  if(!confirm("Yakin ingin menghapus produk ini?")) return;
 
-  const {error}=await db.from("products").delete().eq("id",id);
+  const {error} = await db
+    .from("products")
+    .delete()
+    .eq("id",id);
 
-  if(error){alert(error.message);return;}
+  if(error){
+    alert("Gagal menghapus: " + error.message);
+    return;
+  }
 
   alert("Produk berhasil dihapus.");
-  loadProducts();
+  await loadProducts();
 }
 
 function resetForm(){
-  ["productId","name","price","category","stock",
-   "image","description"].forEach(id=>{
-    document.getElementById(id).value="";
+  [
+    "productId","name","price","category",
+    "stock","image","description"
+  ].forEach(id=>{
+    $(id).value = "";
   });
 }
 
+$("btnLogin").addEventListener("click",loginAdmin);
+$("btnLogout").addEventListener("click",logoutAdmin);
+$("btnSave").addEventListener("click",saveProduct);
+$("btnReset").addEventListener("click",resetForm);
+
+$("productList").addEventListener("click",event=>{
+  const editButton = event.target.closest("[data-edit]");
+  const deleteButton = event.target.closest("[data-delete]");
+
+  if(editButton){
+    editProduct(editButton.dataset.edit);
+  }
+
+  if(deleteButton){
+    deleteProduct(deleteButton.dataset.delete);
+  }
+});
+
 async function checkSession(){
-  const {data}=await db.auth.getSession();
-  if(!data.session)return;
+  try{
+    const {data,error} = await db.auth.getSession();
 
-  const {data:isAdmin,error}=await db.rpc("is_admin");
+    if(error) throw error;
+    if(!data.session) return;
 
-  if(!error && isAdmin===true){
-    document.getElementById("login").style.display="none";
-    document.getElementById("panel").style.display="block";
-    loadProducts();
-  }else{
-    await db.auth.signOut();
+    await verifyAdmin();
+
+    $("login").style.display = "none";
+    $("panel").style.display = "block";
+
+    await loadProducts();
+
+  }catch(error){
+    showMessage(error.message);
   }
 }
 
 checkSession();
 </script>
-<script>
-</script>
-<script>
-function loginAdmin() {
-  alert(" <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-
-<script>
-const SUPABASE_URL = "MASUKKAN_PROJECT_URL";
-const SUPABASE_KEY = "MASUKKAN_PUBLISHABLE_KEY";
-
-const db = supabase.createClient(
-  SUPABASE_URL,
-  SUPABASE_KEY
-);
-
-async function loginAdmin() {
-  const email = document.getElementById("email").value;
-  const password = 
-</script>;
-}
-</script>
 </body>
-</html> 
+</html>
