@@ -410,6 +410,26 @@ async function checkSession(){
 }
 
 checkSession();
+
+document.getElementById("btnForgotPassword").addEventListener("click", async function () {
+  const email = document.getElementById("email").value.trim();
+
+  if (!email) {
+    alert("Masukkan email admin terlebih dahulu!");
+    return;
+  }
+
+  const { error } = await supabase.auth.resetPasswordForEmail(email, {
+    redirectTo: "https://jafarhbsyi-coboy.github.io/Berkahshop/admin.html"
+  });
+
+  if (error) {
+    alert("Gagal: " + error.message);
+  } else {
+    alert("Email reset password berhasil dikirim. Periksa Gmail.");
+  }
+});
+
 </script>
 </body>
 </html>
