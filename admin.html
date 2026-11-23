@@ -237,19 +237,5 @@ async function loginAdmin() {
 </script>;
 }
 </script>
-document.getElementById("password").value;
-
-  const { data, error } = await db.auth.signInWithPassword({
-    email: email,
-    password: password
-  });
-
-  if (error) {
-    alert("Login gagal: " + error.message);
-    return;
-  }
-
-  alert("Alhamdulillah! Login Supabase berhasil.");
-}
 </body>
 </html> 
