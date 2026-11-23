@@ -302,6 +302,27 @@ async function deleteProduct(id){
   alert("Produk berhasil dihapus.");
   await loadProducts();
 }
+async function forgotPassword(){
+  const email = $("email").value.trim();
+
+  if(!email){
+    alert("Masukkan email admin terlebih dahulu.");
+    return;
+  }
+
+  const { error } = await db.auth.resetPasswordForEmail(
+    email,
+    {
+      redirectTo: "https://jafarhbsyi-coboy.github.io/Berkahshop/admin.html"
+    }
+  );
+
+  if(error){
+    alert(error.message);
+  }else{
+    alert("Link reset password sudah dikirim ke email.");
+  }
+}
 
 function resetForm(){
   [
@@ -316,7 +337,9 @@ $("btnLogin").addEventListener("click",loginAdmin);
 $("btnLogout").addEventListener("click",logoutAdmin);
 $("btnSave").addEventListener("click",saveProduct);
 $("btnReset").addEventListener("click",resetForm);
-
+$("btnForgotPassword").addEventListener(
+  "click", forgotPassword
+);
 $("productList").addEventListener("click",event=>{
   const editButton = event.target.closest("[data-edit]");
   const deleteButton = event.target.closest("[data-delete]");
