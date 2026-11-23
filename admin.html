@@ -323,7 +323,12 @@ async function forgotPassword(){
     return;
   }
 
-  const { error } = await db.auth.resetPasswordForEmail(
+  const { error } = await db.auth.const { error } = await supabase.auth.resetPasswordForEmail(
+  email,
+  {
+    redirectTo: 'https://jafarhbsyi-coboy.github.io/Berkahshop/admin.html'
+  }
+);(
     email,
     {
       redirectTo: "https://jafarhbsyi-coboy.github.io/Berkahshop/admin.html"
