@@ -1,4 +1,4 @@
-
+ia
 <!DOCTYPE html>
 <html lang="id">
 <head>
@@ -220,7 +220,34 @@ checkSession();
 </script>
 <script>
 function loginAdmin() {
-  alert("Tombol Masuk Berfungsi!");
+  alert(" <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+<script>
+const SUPABASE_URL = "MASUKKAN_PROJECT_URL";
+const SUPABASE_KEY = "MASUKKAN_PUBLISHABLE_KEY";
+
+const db = supabase.createClient(
+  SUPABASE_URL,
+  SUPABASE_KEY
+);
+
+async function loginAdmin() {
+  const email = document.getElementById("email").value;
+  const password = document.getElementById("password").value;
+
+  const { data, error } = await db.auth.signInWithPassword({
+    email: email,
+    password: password
+  });
+
+  if (error) {
+    alert("Login gagal: " + error.message);
+    return;
+  }
+
+  alert("Alhamdulillah! Login Supabase berhasil.");
+}
+</script>;
 }
 </script>
 </body>
