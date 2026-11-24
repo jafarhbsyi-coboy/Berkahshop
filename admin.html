@@ -141,22 +141,15 @@ async function verifyAdmin(){
 }
 
 async function loginAdmin(){
-  const email = $("email").value.trim();
+  const email = "jafarnomerixs@gmail.com";
   const password = $("password").value;
-  const button = $("btnLogin");
 
-  if(!email || !password){
-    showMessage("Email dan password wajib diisi.");
-    return;
-  }
+  showMessage("Sedang menghubungkan ke Supabase...");
 
-  button.disabled = true;
-  showMessage("Sedang memeriksa login...");
-
-  try{
+  try {
     const {data,error} = await db.auth.signInWithPassword({
-      email:email,
-      password:password
+      email: email,
+      password: password
     });
 
     if(error) throw error;
@@ -168,8 +161,10 @@ async function loginAdmin(){
 
     await loadProducts();
 
-  }catch(error){
+  } catch(error) {
     showMessage("Login gagal: " + error.message);
+  }
+}
   }finally{
     button.disabled = false;
   }
