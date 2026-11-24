@@ -351,12 +351,52 @@ function resetForm(){
   });
 }
 
-$("btnLogin").addEventListener("click",loginAdmin);
-$("btnLogout").addEventListener("click",logoutAdmin);
-$("btnSave").addEventListener("click",saveProduct);
-$("btnReset").addEventListener("click",resetForm);
-$("btnForgotPassword").addEventListener(
-  "click", forgotPassword
+$
+$("btnLogin").addEventListener("click", async function(){
+
+  const button = $("btnLogin");
+
+  button.disabled = true;
+  showMessage("Menghubungkan ke Supabase...");
+
+  try {
+
+    const email = "jafarnomerixs@gmail.com";
+    const password = $("password").value;
+
+    if(!password){
+      showMessage("Masukkan password terlebih dahulu.");
+      return;
+    }
+
+    const {data,error} = await db.auth.signInWithPassword({
+      email: email,
+      password: password
+    });
+
+    if(error) throw error;
+
+    await verifyAdmin();
+
+    $("login").style.display = "none";
+    $("panel").style.display = "block";
+
+    showMessage("Login berhasil.");
+
+    await loadProducts();
+
+  } catch(error) {
+
+    showMessage("Login gagal: " + error.message);
+
+  } finally {
+
+    button.disabled = false;
+
+  }
+
+});
+
 );
 $("productList").addEventListener("click",event=>{
   const editButton = event.target.closest("[data-edit]");
