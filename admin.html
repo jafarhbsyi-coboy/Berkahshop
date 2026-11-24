@@ -29,7 +29,143 @@
     <h2>Login Admin</h2>
     <input id="email" type="email" value="jafarnomerixs@gmail.com" placeholder="Email admin" autocomplete="username">
     <input id="password" type="password" placeholder="Password" autocomplete="current-password">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+<main>
+  <h1>Admin Berkahshop</h1>
+
+  <section class="box" id="login">
+    <h2>Login Admin</h2>
+    <input id="email" type="email" value="jafarnomerixs@gmail.com" placeholder="Email admin" autocomplete="username">
+    <input id="password" type="password" placeholder="Password" autocomplete="current-password">
     <button type="button" id="btnLogin">MASUK</button>
+    <button type="button" id="btnForgotPassword">LUPA PASSWORD?</button>
+
+    <div id="recoveryBox">
+      <h3>Buat Password Baru</h3>
+      <input id="newPassword" type="password" placeholder="Masukkan password baru (minimal 6 karakter)" autocomplete="new-password">
+      <button type="button" id="btnUpdatePassword">SIMPAN PASSWORD BARU</button>
+    </div>
+    <p id="message" role="status" aria-live="polite"></p>
+  </section>
+
+  <section class="box" id="panel">
+    <h2>Pengelolaan Produk</h2>
+    <button type="button" id="btnLogout" class="danger">Keluar</button>
+    <h3>Tambah / Edit Produk</h3>
+    <input id="productId" type="hidden">
+    <input id="name" placeholder="Nama produk">
+    <input id="price" type="number" min="0" step="any" placeholder="Harga">
+    <input id="category" placeholder="Kategori">
+    <input id="stock" type="number" min="0" step="1" placeholder="Stok">
+    <input id="image" type="url" placeholder="URL foto produk (https://...)">
+    <input id="description" placeholder="Deskripsi produk">
+    <button type="button" id="btnSave">Simpan Produk</button>
+    <button type="button" id="btnReset">Kosongkan Form</button>
+    <h3>Daftar Produk</h3>
+    <div id="productList">Produk akan tampil setelah admin masuk.</div>
+  </section>
+</main>
+
+<script>
+"use strict";
+
+// Konfigurasi proyek Supabase Berkahshop yang baru.
+const SUPABASE_URL = "https://cbkocdwcigzaqjjohixs.supabase.co";
+const SUPABASE_KEY = "sb_publishable_uINAI2la9HeMkhpxS_mAoA_sQ_-7bX6";
+const ADMIN_EMAIL = "jafarnomerixs@gmail.com";
+const RECOVERY_URL = "https://jafarhbsyi-coboy.github.io/Berkahshop/admin.html";
+
+const $ = (id) => document.getElementById(id);
+const db = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+function showMessage(message) {
+  $("message").textContent = message;
+}
+
+function setBusy(button, busy, busyText) {
+  if (!button.dataset.originalText) button.dataset.originalText = button.textContent;
+  button.disabled = busy;
+  button.textContent = busy ? busyText : button.dataset.originalText;
+}
+
+function escapeHTML(value) {
+  return String(value ?? "").replace(/[&<>"']/g, (char) => ({
+    "&":"&amp;", "<":"&lt;", ">":"&gt;", '"':"&quot;", "'":"&#39;"
+  })[char]);
+}
+
+async function verifyAdmin() {
+  const { data, error } = await db.rpc("is_admin");
+  if (error) throw new Error("Pemeriksaan admin gagal: " + error.message);
+  if (data !== true) {
+    await db.auth.signOut();
+    throw new Error("Email ini belum terdaftar sebagai admin Berkahshop.");
+  }
+  return true;
+}
+
+async function openAdminPanel() {
+  await verifyAdmin();
+  $("login").style.display = "none";
+  $("panel").style.display = "block";
+  await loadProducts();
+}
+
+async function loginAdmin() {
+  const button = $("btnLogin");
+  const email = $("email").value.trim() || ADMIN_EMAIL;
+  const password = $("password").value;
+
+  if (!email || !password) {
+    showMessage("Masukkan email dan password admin terlebih dahulu.");
+    return;
+  }
+
+  setBusy(button, true, "MEMERIKSA...");
+  showMessage("Sedang menghubungkan ke Supabase...");
+
+  try {
+    const { error } = await db.auth.signInWithPassword({ email, password });
+    if (error) throw error;
+    await openAdminPanel();
+    showMessage("Login berhasil.");
+  } catch (error) {
+    showMessage("Login gagal: " + (error.message || "Terjadi kesalahan."));
+  } finally {
+    setBusy(button, false);
+  }
+}
+
+async function forgotPassword() {
+  const button = $("btnForgotPassword");
+  const email = $("email").value.trim() || ADMIN_EMAIL;
+
+  if (!email) {
+    showMessage("Masukkan email admin terlebih dahulu.");
+    return;
+  }
+
+  setBusy(button, true, "MENGIRIM...");
+  showMessage("Sedang mengirim tautan reset password...");
+
+  try {
+    const { error } = await db.auth.resetPasswordForEmail(email, {
+      redirectTo: RECOVERY_URL
+    });
+    if (error) throw error;
+    showMessage("Permintaan reset password berhasil dikirim. Periksa Gmail, termasuk folder Spam.");
+  } catch (error) {
+    showMessage("Gagal mengirim reset password: " + (error.message || "Terjadi kesalahan."));
+  } finally {
+    setBusy(button, false);
+  }
+}
+
+async function updatePassword() {
+  const button = $("btnUpdatePassword");
+  const password = $("newPassword").value;
     <button type="button" id="btnForgotPassword">LUPA PASSWORD?</button>
 
     <div id="recoveryBox">
