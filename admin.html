@@ -83,29 +83,44 @@ await db.auth.signOut();
 throw new Error("Akun bukan admin");
 }
 
-document.getElementById("login").style.display="none";
-document.getElementById("resetBox").style.display="none";
-document.getElementById("panel").style.display="block";
-status("Login admin berhasil");
-}
 
-document.getElementById("btnLogin").onclick=async()=>{
-try{
-status("Memproses login...");
-const email=document.getElementById("email").value.trim();
-const password=document.getElementById("password").value;
+document.getElementById("btnLogin").addEventListener("click", async function () {
+  const email = document.getElementById("email").value.trim();
+  const password = document.getElementById("password").value;
+  const message = document.getElementById("loginMessage");
+  const button = document.getElementById("btnLogin");
 
-const {error}=await db.auth.signInWithPassword({
-email,password
+  if (!email || !password) {
+    message.textContent = "Email dan password wajib diisi!";
+    message.style.color = "red";
+    return;
+  }
+
+  button.disabled = true;
+  button.textContent = "SEDANG MASUK...";
+
+  try {
+    const { data, error } = await db.auth.signInWithPassword({
+      email: email,
+      password: password
+    });
+
+    if (error) throw error;
+
+    message.textContent = "Login berhasil!";
+    message.style.color = "green";
+
+    await verifyAdmin();
+
+  } catch (error) {
+    message.textContent = "Login gagal: " + error.message;
+    message.style.color = "red";
+  } finally {
+    button.disabled = false;
+    button.textContent = "MASUK";
+  }
 });
 
-if(error) throw error;
-await verifyAdmin();
-
-}catch(e){
-status("Gagal: "+e.message);
-}
-};
 
 document.getElementById("btnReset").onclick=async()=>{
 try{
