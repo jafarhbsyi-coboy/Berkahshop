@@ -1,615 +1,182 @@
+
 <!DOCTYPE html>
 <html lang="id">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Admin Berkahshop</title>
-<style>
-  body{font-family:Arial,sans-serif;background:#f4f4f4;margin:0;padding:20px;color:#222}
-  main{max-width:650px;margin:auto}
-  .box{background:#fff;padding:20px;border-radius:12px;margin-bottom:18px}
-  h1{color:#673ab7}
-  input,button{width:100%;padding:12px;margin:7px 0;box-sizing:border-box;border-radius:7px}
-  input{border:1px solid #ccc}
-  button{background:#673ab7;color:#fff;border:0;cursor:pointer}
-  button:disabled{opacity:.6;cursor:wait}
-  .danger{background:#d32f2f}
-  .product{padding:12px;border-bottom:1px solid #ddd;overflow-wrap:anywhere}
-  img{max-width:90px;max-height:90px;object-fit:cover;display:block;margin:8px 0}
-  #panel,#recoveryBox{display:none}
-  #message{overflow-wrap:anywhere;white-space:pre-wrap}
-</style>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+body{font-family:Arial;background:#f1f5f9;margin:0;padding:18px;color:#222}
+main{max-width:600px;margin:auto}
+.box{background:white;padding:20px;margin:15px 0;border-radius:12px;box-shadow:0 2px 8px #ddd}
+input,button{width:100%;padding:13px;margin:8px 0;box-sizing:border-box;border-radius:7px}
+input{border:1px solid #ccc}
+button{border:0;background:#087b45;color:white;font-weight:bold}
+.danger{background:#c62828}
+h2{text-align:center}
+#panel,#resetBox{display:none}
+#status{color:#087b45;text-align:center}
+</style>
 </head>
 <body>
 <main>
-  <h1>Admin Berkahshop</h1>
 
-  <section class="box" id="login">
-    <h2>Login Admin</h2>
-    <input id="email" type="email" value="jafarnomerixs@gmail.com" placeholder="Email admin" autocomplete="username">
-    <input id="password" type="password" placeholder="Password" autocomplete="current-password">
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-</head>
-<body>
-<main>
-  <h1>Admin Berkahshop</h1>
+<section class="box" id="login">
+<h2>LOGIN ADMIN BERKAHSHOP</h2>
+<input id="email" type="email" placeholder="Email admin">
+<input id="password" type="password" placeholder="Password admin">
+<button id="btnLogin">MASUK</button>
+<button id="btnReset" type="button">LUPA PASSWORD</button>
+</section>
 
-  <section class="box" id="login">
-    <h2>Login Admin</h2>
-    <input id="email" type="email" value="jafarnomerixs@gmail.com" placeholder="Email admin" autocomplete="username">
-    <input id="password" type="password" placeholder="Password" autocomplete="current-password">
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-</head>
-<body>
-<main>
-  <h1>Admin Berkahshop</h1>
+<section class="box" id="resetBox">
+<h2>GANTI PASSWORD</h2>
+<input id="newPassword" type="password" placeholder="Password baru">
+<button id="btnUpdatePassword">SIMPAN PASSWORD BARU</button>
+</section>
 
-  <section class="box" id="login">
-    <h2>Login Admin</h2>
-    <input id="email" type="email" value="jafarnomerixs@gmail.com" placeholder="Email admin" autocomplete="username">
-    <input id="password" type="password" placeholder="Password" autocomplete="current-password">
-    <button type="button" id="btnLogin"
-onclick="alert('TOMBOL MASUK BERFUNGSI')">
-MASUK
-</button>
-    <button type="button" id="btnForgotPassword">LUPA PASSWORD?</button>
+<section class="box" id="panel">
+<h2>PENGELOLAAN PRODUK</h2>
+<input id="nama" placeholder="Nama produk">
+<input id="harga" type="number" placeholder="Harga produk">
+<input id="stok" type="number" placeholder="Stok produk">
+<input id="foto" type="text" placeholder="URL foto produk">
+<button id="btnTambah">TAMBAH PRODUK</button>
+<button class="danger" id="btnLogout">KELUAR</button>
+</section>
 
-    <div id="recoveryBox">
-      <h3>Buat Password Baru</h3>
-      <input id="newPassword" type="password" placeholder="Masukkan password baru (minimal 6 karakter)" autocomplete="new-password">
-      <button type="button" id="btnUpdatePassword">SIMPAN PASSWORD BARU</button>
-    </div>
-    <p id="message" role="status" aria-live="polite"></p>
-  </section>
-
-  <section class="box" id="panel">
-    <h2>Pengelolaan Produk</h2>
-    <button type="button" id="btnLogout" class="danger">Keluar</button>
-    <h3>Tambah / Edit Produk</h3>
-    <input id="productId" type="hidden">
-    <input id="name" placeholder="Nama produk">
-    <input id="price" type="number" min="0" step="any" placeholder="Harga">
-    <input id="category" placeholder="Kategori">
-    <input id="stock" type="number" min="0" step="1" placeholder="Stok">
-    <input id="image" type="url" placeholder="URL foto produk (https://...)">
-    <input id="description" placeholder="Deskripsi produk">
-    <button type="button" id="btnSave">Simpan Produk</button>
-    <button type="button" id="btnReset">Kosongkan Form</button>
-    <h3>Daftar Produk</h3>
-    <div id="productList">Produk akan tampil setelah admin masuk.</div>
-  </section>
+<p id="status"></p>
 </main>
 
 <script>
-"use strict";
+const SUPABASE_URL = "MASUKKAN_SUPABASE_PROJECT_URL";
+const SUPABASE_KEY = "MASUKKAN_SUPABASE_ANON_PUBLIC_KEY";
 
-// Konfigurasi proyek Supabase Berkahshop yang baru.
-const SUPABASE_URL = "https://cbkocdwcigzaqjjohixs.supabase.co";
-const SUPABASE_KEY = "sb_publishable_uINAI2la9HeMkhpxS_mAoA_sQ_-7bX6";
-const ADMIN_EMAIL = "jafarnomerixs@gmail.com";
-const RECOVERY_URL = "https://jafarhbsyi-coboy.github.io/Berkahshop/admin.html";
+const db = window.supabase.createClient(
+SUPABASE_URL,
+SUPABASE_KEY
+);
 
-const $ = (id) => document.getElementById(id);
-const db = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+const statusText = document.getElementById("status");
 
-function showMessage(message) {
-  $("message").textContent = message;
+function status(pesan){
+statusText.textContent = pesan;
 }
 
-function setBusy(button, busy, busyText) {
-  if (!button.dataset.originalText) button.dataset.originalText = button.textContent;
-  button.disabled = busy;
-  button.textContent = busy ? busyText : button.dataset.originalText;
+async function verifyAdmin(){
+const {data,error} = await db.auth.getUser();
+
+if(error || !data.user){
+throw new Error("Login tidak valid");
 }
 
-function escapeHTML(value) {
-  return String(value ?? "").replace(/[&<>"']/g, (char) => ({
-    "&":"&amp;", "<":"&lt;", ">":"&gt;", '"':"&quot;", "'":"&#39;"
-  })[char]);
+const {data:admin,error:adminError} = await db
+.from("admins")
+.select("*")
+.eq("email",data.user.email)
+.maybeSingle();
+
+if(adminError || !admin){
+await db.auth.signOut();
+throw new Error("Akun bukan admin");
 }
 
-async function verifyAdmin() {
-  const { data, error } = await db.rpc("is_admin");
-  if (error) throw new Error("Pemeriksaan admin gagal: " + error.message);
-  if (data !== true) {
-    await db.auth.signOut();
-    throw new Error("Email ini belum terdaftar sebagai admin Berkahshop.");
-  }
-  return true;
+document.getElementById("login").style.display="none";
+document.getElementById("resetBox").style.display="none";
+document.getElementById("panel").style.display="block";
+status("Login admin berhasil");
 }
 
-async function openAdminPanel() {
-  await verifyAdmin();
-  $("login").style.display = "none";
-  $("panel").style.display = "block";
-  await loadProducts();
-}
-
-async function loginAdmin() {
-  const button = $("btnLogin");
-  const email = $("email").value.trim() || ADMIN_EMAIL;
-  const password = $("password").value;
-
-  if (!email || !password) {
-    showMessage("Masukkan email dan password admin terlebih dahulu.");
-    return;
-  }
-
-  setBusy(button, true, "MEMERIKSA...");
-  showMessage("Sedang menghubungkan ke Supabase...");
-
-  try {
-    const { error } = await db.auth.signInWithPassword({ email, password });
-    if (error) throw error;
-    await openAdminPanel();
-    showMessage("Login berhasil.");
-  } catch (error) {
-    showMessage("Login gagal: " + (error.message || "Terjadi kesalahan."));
-  } finally {
-    setBusy(button, false);
-  }
-}
-
-async function forgotPassword() {
-  const button = $("btnForgotPassword");
-  const email = $("email").value.trim() || ADMIN_EMAIL;
-
-  if (!email) {
-    showMessage("Masukkan email admin terlebih dahulu.");
-    return;
-  }
-
-  setBusy(button, true, "MENGIRIM...");
-  showMessage("Sedang mengirim tautan reset password...");
-
-  try {
-    const { error } = await db.auth.resetPasswordForEmail(email, {
-      redirectTo: RECOVERY_URL
-    });
-    if (error) throw error;
-    showMessage("Permintaan reset password berhasil dikirim. Periksa Gmail, termasuk folder Spam.");
-  } catch (error) {
-    showMessage("Gagal mengirim reset password: " + (error.message || "Terjadi kesalahan."));
-  } finally {
-    setBusy(button, false);
-  }
-}
-
-async function updatePassword() {
-  const button = $("btnUpdatePassword");
-  const password = $("newPassword").value;
-    <button type="button" id="btnForgotPassword">LUPA PASSWORD?</button>
-
-    <div id="recoveryBox">
-      <h3>Buat Password Baru</h3>
-      <input id="newPassword" type="password" placeholder="Masukkan password baru (minimal 6 karakter)" autocomplete="new-password">
-      <button type="button" id="btnUpdatePassword">SIMPAN PASSWORD BARU</button>
-    </div>
-    <p id="message" role="status" aria-live="polite"></p>
-  </section>
-
-  <section class="box" id="panel">
-    <h2>Pengelolaan Produk</h2>
-    <button type="button" id="btnLogout" class="danger">Keluar</button>
-    <h3>Tambah / Edit Produk</h3>
-    <input id="productId" type="hidden">
-    <input id="name" placeholder="Nama produk">
-    <input id="price" type="number" min="0" step="any" placeholder="Harga">
-    <input id="category" placeholder="Kategori">
-    <input id="stock" type="number" min="0" step="1" placeholder="Stok">
-    <input id="image" type="url" placeholder="URL foto produk (https://...)">
-    <input id="description" placeholder="Deskripsi produk">
-    <button type="button" id="btnSave">Simpan Produk</button>
-    <button type="button" id="btnReset">Kosongkan Form</button>
-    <h3>Daftar Produk</h3>
-    <div id="productList">Produk akan tampil setelah admin masuk.</div>
-  </section>
-</main>
-
-<script>
-"use strict";
-
-// Konfigurasi proyek Supabase Berkahshop yang baru.
-const SUPABASE_URL = "https://cbkocdwcigzaqjjohixs.supabase.co";
-const SUPABASE_KEY = "sb_publishable_uINAI2la9HeMkhpxS_mAoA_sQ_-7bX6";
-const ADMIN_EMAIL = "jafarnomerixs@gmail.com";
-const RECOVERY_URL = "https://jafarhbsyi-coboy.github.io/Berkahshop/admin.html";
-
-const $ = (id) => document.getElementById(id);
-const db = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-
-function showMessage(message) {
-  $("message").textContent = message;
-}
-
-function setBusy(button, busy, busyText) {
-  if (!button.dataset.originalText) button.dataset.originalText = button.textContent;
-  button.disabled = busy;
-  button.textContent = busy ? busyText : button.dataset.originalText;
-}
-
-function escapeHTML(value) {
-  return String(value ?? "").replace(/[&<>"']/g, (char) => ({
-    "&":"&amp;", "<":"&lt;", ">":"&gt;", '"':"&quot;", "'":"&#39;"
-  })[char]);
-}
-
-async function verifyAdmin() {
-  const { data, error } = await db.rpc("is_admin");
-  if (error) throw new Error("Pemeriksaan admin gagal: " + error.message);
-  if (data !== true) {
-    await db.auth.signOut();
-    throw new Error("Email ini belum terdaftar sebagai admin Berkahshop.");
-  }
-  return true;
-}
-
-async function openAdminPanel() {
-  await verifyAdmin();
-  $("login").style.display = "none";
-  $("panel").style.display = "block";
-  await loadProducts();
-}
-
-async function loginAdmin() {
-  const button = $("btnLogin");
-  const email = $("email").value.trim() || ADMIN_EMAIL;
-  const password = $("password").value;
-
-  if (!email || !password) {
-    showMessage("Masukkan email dan password admin terlebih dahulu.");
-    return;
-  }
-
-  setBusy(button, true, "MEMERIKSA...");
-  showMessage("Sedang menghubungkan ke Supabase...");
-
-  try {
-    const { error } = await db.auth.signInWithPassword({ email, password });
-    if (error) throw error;
-    await openAdminPanel();
-    showMessage("Login berhasil.");
-  } catch (error) {
-    showMessage("Login gagal: " + (error.message || "Terjadi kesalahan."));
-  } finally {
-    setBusy(button, false);
-  }
-}
-
-async function forgotPassword() {
-  const button = $("btnForgotPassword");
-  const email = $("email").value.trim() || ADMIN_EMAIL;
-
-  if (!email) {
-    showMessage("Masukkan email admin terlebih dahulu.");
-    return;
-  }
-
-  setBusy(button, true, "MENGIRIM...");
-  showMessage("Sedang mengirim tautan reset password...");
-
-  try {
-    const { error } = await db.auth.resetPasswordForEmail(email, {
-      redirectTo: RECOVERY_URL
-    });
-    if (error) throw error;
-    showMessage("Permintaan reset password berhasil dikirim. Periksa Gmail, termasuk folder Spam.");
-  } catch (error) {
-    showMessage("Gagal mengirim reset password: " + (error.message || "Terjadi kesalahan."));
-  } finally {
-    setBusy(button, false);
-  }
-}
-
-async function updatePassword() {
-  const button = $("btnUpdatePassword");
-  const password = $("newPassword").value;
-    <button type="button" id="btnForgotPassword">LUPA PASSWORD?</button>
-
-    <div id="recoveryBox">
-      <h3>Buat Password Baru</h3>
-      <input id="newPassword" type="password" placeholder="Masukkan password baru (minimal 6 karakter)" autocomplete="new-password">
-      <button type="button" id="btnUpdatePassword">SIMPAN PASSWORD BARU</button>
-    </div>
-    <p id="message" role="status" aria-live="polite"></p>
-  </section>
-
-  <section class="box" id="panel">
-    <h2>Pengelolaan Produk</h2>
-    <button type="button" id="btnLogout" class="danger">Keluar</button>
-    <h3>Tambah / Edit Produk</h3>
-    <input id="productId" type="hidden">
-    <input id="name" placeholder="Nama produk">
-    <input id="price" type="number" min="0" step="any" placeholder="Harga">
-    <input id="category" placeholder="Kategori">
-    <input id="stock" type="number" min="0" step="1" placeholder="Stok">
-    <input id="image" type="url" placeholder="URL foto produk (https://...)">
-    <input id="description" placeholder="Deskripsi produk">
-    <button type="button" id="btnSave">Simpan Produk</button>
-    <button type="button" id="btnReset">Kosongkan Form</button>
-    <h3>Daftar Produk</h3>
-    <div id="productList">Produk akan tampil setelah admin masuk.</div>
-  </section>
-</main>
-
-<script>
-"use strict";
-
-// Konfigurasi proyek Supabase Berkahshop yang baru.
-const SUPABASE_URL = "https://cbkocdwcigzaqjjohixs.supabase.co";
-const SUPABASE_KEY = "sb_publishable_uINAI2la9HeMkhpxS_mAoA_sQ_-7bX6";
-const ADMIN_EMAIL = "jafarnomerixs@gmail.com";
-const RECOVERY_URL = "https://jafarhbsyi-coboy.github.io/Berkahshop/admin.html";
-
-const $ = (id) => document.getElementById(id);
-const db = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-
-function showMessage(message) {
-  $("message").textContent = message;
-}
-
-function setBusy(button, busy, busyText) {
-  if (!button.dataset.originalText) button.dataset.originalText = button.textContent;
-  button.disabled = busy;
-  button.textContent = busy ? busyText : button.dataset.originalText;
-}
-
-function escapeHTML(value) {
-  return String(value ?? "").replace(/[&<>"']/g, (char) => ({
-    "&":"&amp;", "<":"&lt;", ">":"&gt;", '"':"&quot;", "'":"&#39;"
-  })[char]);
-}
-
-async function verifyAdmin() {
-  const { data, error } = await db.rpc("is_admin");
-  if (error) throw new Error("Pemeriksaan admin gagal: " + error.message);
-  if (data !== true) {
-    await db.auth.signOut();
-    throw new Error("Email ini belum terdaftar sebagai admin Berkahshop.");
-  }
-  return true;
-}
-
-async function openAdminPanel() {
-  await verifyAdmin();
-  $("login").style.display = "none";
-  $("panel").style.display = "block";
-  await loadProducts();
-}
-
-async function loginAdmin() {
-  const button = $("btnLogin");
-  const email = $("email").value.trim() || ADMIN_EMAIL;
-  const password = $("password").value;
-
-  if (!email || !password) {
-    showMessage("Masukkan email dan password admin terlebih dahulu.");
-    return;
-  }
-
-  setBusy(button, true, "MEMERIKSA...");
-  showMessage("Sedang menghubungkan ke Supabase...");
-
-  try {
-    const { error } = await db.auth.signInWithPassword({ email, password });
-    if (error) throw error;
-    await openAdminPanel();
-    showMessage("Login berhasil.");
-  } catch (error) {
-    showMessage("Login gagal: " + (error.message || "Terjadi kesalahan."));
-  } finally {
-    setBusy(button, false);
-  }
-}
-
-async function forgotPassword() {
-  const button = $("btnForgotPassword");
-  const email = $("email").value.trim() || ADMIN_EMAIL;
-
-  if (!email) {
-    showMessage("Masukkan email admin terlebih dahulu.");
-    return;
-  }
-
-  setBusy(button, true, "MENGIRIM...");
-  showMessage("Sedang mengirim tautan reset password...");
-
-  try {
-    const { error } = await db.auth.resetPasswordForEmail(email, {
-      redirectTo: RECOVERY_URL
-    });
-    if (error) throw error;
-    showMessage("Permintaan reset password berhasil dikirim. Periksa Gmail, termasuk folder Spam.");
-  } catch (error) {
-    showMessage("Gagal mengirim reset password: " + (error.message || "Terjadi kesalahan."));
-  } finally {
-    setBusy(button, false);
-  }
-}
-
-async function updatePassword() {
-  const button = $("btnUpdatePassword");
-  const password = $("newPassword").value;
-
-  if (password.length < 6) {
-    showMessage("Password baru minimal 6 karakter.");
-    return;
-  }
-
-  setBusy(button, true, "MENYIMPAN...");
-  try {
-    const { error } = await db.auth.updateUser({ password });
-    if (error) throw error;
-
-    await db.auth.signOut();
-    $("recoveryBox").style.display = "none";
-    $("password").value = "";
-    $("newPassword").value = "";
-    $("login").style.display = "block";
-    $("panel").style.display = "none";
-    showMessage("Password berhasil diperbarui. Silakan masuk menggunakan password baru.");
-  } catch (error) {
-    showMessage("Gagal memperbarui password: " + (error.message || "Terjadi kesalahan."));
-  } finally {
-    setBusy(button, false);
-  }
-}
-
-async function logoutAdmin() {
-  const { error } = await db.auth.signOut();
-  if (error) {
-    showMessage("Gagal keluar: " + error.message);
-    return;
-  }
-  $("panel").style.display = "none";
-  $("login").style.display = "block";
-  $("password").value = "";
-  showMessage("Anda sudah keluar dari akun admin.");
-}
-
-async function loadProducts() {
-  $("productList").textContent = "Memuat produk...";
-  const { data, error } = await db.from("products").select("*").order("id", { ascending: false });
-
-  if (error) {
-    $("productList").textContent = "Gagal memuat produk: " + error.message;
-    return;
-  }
-  if (!data || data.length === 0) {
-    $("productList").textContent = "Belum ada produk.";
-    return;
-  }
-
-  $("productList").innerHTML = data.map((product) => {
-    const imageURL = String(product.image_url || "");
-    const safeImage = /^https?:\/\//i.test(imageURL)
-      ? `<img src="${escapeHTML(imageURL)}" alt="Foto produk" loading="lazy">`
-      : "";
-
-    return `<div class="product">
-      <b>${escapeHTML(product.name)}</b><br>
-      Harga: Rp${Number(product.price).toLocaleString("id-ID")}<br>
-      Kategori: ${escapeHTML(product.category || "-")}<br>
-      Stok: ${escapeHTML(product.stock)}<br>
-      ${safeImage}
-      <button type="button" data-edit="${escapeHTML(product.id)}">Edit</button>
-      <button type="button" class="danger" data-delete="${escapeHTML(product.id)}">Hapus</button>
-    </div>`;
-  }).join("");
-}
-
-async function saveProduct() {
-  const id = $("productId").value;
-  const priceText = $("price").value;
-  const stockText = $("stock").value;
-
-  const product = {
-    name: $("name").value.trim(),
-    price: Number(priceText),
-    category: $("category").value.trim() || null,
-    stock: Number(stockText),
-    image_url: $("image").value.trim() || null,
-    description: $("description").value.trim() || null
-  };
-
-  if (!product.name || priceText === "" || !Number.isFinite(product.price) || product.price < 0 ||
-      stockText === "" || !Number.isInteger(product.stock) || product.stock < 0) {
-    alert("Periksa nama, harga, dan stok produk. Harga harus 0 atau lebih, stok bilangan bulat 0 atau lebih.");
-    return;
-  }
-  if (product.image_url && !/^https?:\/\//i.test(product.image_url)) {
-    alert("URL foto harus diawali http:// atau https://");
-    return;
-  }
-
-  const button = $("btnSave");
-  setBusy(button, true, "MENYIMPAN...");
-  try {
-    const result = id
-      ? await db.from("products").update(product).eq("id", id)
-      : await db.from("products").insert(product);
-    if (result.error) throw result.error;
-    alert("Produk berhasil disimpan.");
-    resetForm();
-    await loadProducts();
-  } catch (error) {
-    alert("Gagal menyimpan produk: " + (error.message || "Terjadi kesalahan."));
-  } finally {
-    setBusy(button, false);
-  }
-}
-
-async function editProduct(id) {
-  const { data, error } = await db.from("products").select("*").eq("id", id).single();
-  if (error) {
-    alert("Gagal mengambil produk: " + error.message);
-    return;
-  }
-  $("productId").value = data.id;
-  $("name").value = data.name || "";
-  $("price").value = data.price ?? "";
-  $("category").value = data.category || "";
-  $("stock").value = data.stock ?? "";
-  $("image").value = data.image_url || "";
-  $("description").value = data.description || "";
-  window.scrollTo({ top: 0, behavior: "smooth" });
-}
-
-async function deleteProduct(id) {
-  if (!confirm("Yakin ingin menghapus produk ini?")) return;
-  const { error } = await db.from("products").delete().eq("id", id);
-  if (error) {
-    alert("Gagal menghapus produk: " + error.message);
-    return;
-  }
-  alert("Produk berhasil dihapus.");
-  await loadProducts();
-}
-
-function resetForm() {
-  ["productId", "name", "price", "category", "stock", "image", "description"].forEach((id) => {
-    $(id).value = "";
-  });
-}
-
-$("btnLogin").addEventListener("click", loginAdmin);
-$("btnForgotPassword").addEventListener("click", forgotPassword);
-$("btnUpdatePassword").addEventListener("click", updatePassword);
-$("btnLogout").addEventListener("click", logoutAdmin);
-$("btnSave").addEventListener("click", saveProduct);
-$("btnReset").addEventListener("click", resetForm);
-
-$("productList").addEventListener("click", (event) => {
-  const editButton = event.target.closest("[data-edit]");
-  const deleteButton = event.target.closest("[data-delete]");
-  if (editButton) editProduct(editButton.dataset.edit);
-  if (deleteButton) deleteProduct(deleteButton.dataset.delete);
+document.getElementById("btnLogin").onclick=async()=>{
+try{
+status("Memproses login...");
+const email=document.getElementById("email").value.trim();
+const password=document.getElementById("password").value;
+
+const {error}=await db.auth.signInWithPassword({
+email,password
 });
 
-// Supabase mengirim event PASSWORD_RECOVERY setelah tautan email dibuka.
-db.auth.onAuthStateChange((event) => {
-  if (event === "PASSWORD_RECOVERY") {
-    $("login").style.display = "block";
-    $("panel").style.display = "none";
-    $("recoveryBox").style.display = "block";
-    showMessage("Tautan pemulihan terdeteksi. Silakan buat password baru.");
-  }
+if(error) throw error;
+await verifyAdmin();
+
+}catch(e){
+status("Gagal: "+e.message);
+}
+};
+
+document.getElementById("btnReset").onclick=async()=>{
+try{
+const email=document.getElementById("email").value.trim();
+if(!email) throw new Error("Masukkan email admin");
+
+const {error}=await db.auth.resetPasswordForEmail(email,{
+redirectTo:location.origin+location.pathname
 });
 
-async function checkSession() {
-  try {
-    const { data, error } = await db.auth.getSession();
-    if (error) throw error;
-    if (data.session) {
-      await openAdminPanel();
-    }
-  } catch (error) {
-    showMessage("Pemeriksaan sesi: " + (error.message || "Terjadi kesalahan."));
-  }
+if(error) throw error;
+status("Link reset dikirim. Periksa email.");
+}catch(e){
+status("Gagal: "+e.message);
 }
+};
 
-checkSession();
+document.getElementById("btnUpdatePassword").onclick=async()=>{
+try{
+const password=document.getElementById("newPassword").value;
+if(password.length<8) throw new Error("Minimal 8 karakter");
+
+const {error}=await db.auth.updateUser({password});
+if(error) throw error;
+
+status("Password berhasil diperbarui");
+document.getElementById("resetBox").style.display="none";
+document.getElementById("login").style.display="block";
+}catch(e){
+status("Gagal: "+e.message);
+}
+};
+
+document.getElementById("btnTambah").onclick=async()=>{
+try{
+const nama=document.getElementById("nama").value.trim();
+const harga=Number(document.getElementById("harga").value);
+const stok=Number(document.getElementById("stok").value);
+const foto=document.getElementById("foto").value.trim();
+
+if(!nama || !harga) throw new Error("Lengkapi nama dan harga");
+
+const {error}=await db.from("products").insert([{
+nama,harga,stok,foto
+}]);
+
+if(error) throw error;
+status("Produk berhasil ditambahkan");
+}catch(e){
+status("Gagal: "+e.message);
+}
+};
+
+document.getElementById("btnLogout").onclick=async()=>{
+await db.auth.signOut();
+location.reload();
+};
+
+db.auth.getSession().then(async({data})=>{
+if(data.session){
+try{await verifyAdmin();}
+catch(e){status(e.message);}
+}
+});
+
+db.auth.onAuthStateChange((event,session)=>{
+if(event==="PASSWORD_RECOVERY"){
+document.getElementById("login").style.display="none";
+document.getElementById("resetBox").style.display="block";
+status("Silakan masukkan password baru");
+}
+});
 </script>
 </body>
 </html>
