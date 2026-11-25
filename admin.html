@@ -21,44 +21,56 @@ body {
 header {
   background: #087b50;
   color: white;
-  padding: 22px;
   text-align: center;
+  padding: 25px;
 }
 
 .container {
   max-width: 900px;
-  margin: 25px auto;
+  margin: 30px auto;
   padding: 15px;
 }
 
 .box {
   background: white;
-  padding: 22px;
-  border-radius: 12px;
+  padding: 25px;
+  border-radius: 15px;
   margin-bottom: 20px;
   box-shadow: 0 2px 8px #0001;
 }
 
 input {
   width: 100%;
-  padding: 13px;
+  padding: 15px;
   margin: 10px 0;
   border: 1px solid #ccc;
-  border-radius: 7px;
+  border-radius: 8px;
+  font-size: 16px;
 }
 
 button {
-  padding: 12px 18px;
+  padding: 14px 20px;
   border: 0;
-  border-radius: 7px;
+  border-radius: 8px;
   background: #087b50;
   color: white;
+  font-size: 16px;
   cursor: pointer;
-  font-size: 15px;
+}
+
+button:disabled {
+  opacity: .6;
 }
 
 .logout {
   background: #c62828;
+}
+
+.hidden { display: none; }
+
+#pesan {
+  margin-top: 15px;
+  overflow-wrap: anywhere;
 }
 
 .grid {
@@ -69,8 +81,8 @@ button {
 
 .stat {
   background: #e1f3e9;
-  padding: 18px;
   border-radius: 10px;
+  padding: 15px;
   text-align: center;
 }
 
@@ -79,13 +91,8 @@ button {
   font-size: 28px;
 }
 
-.hidden {
-  display: none;
-}
-
-#pesan {
-  color: #c62828;
-  margin-top: 12px;
+@media(max-width: 500px) {
+  .grid { grid-template-columns: 1fr 1fr; }
 }
 </style>
 </head>
@@ -102,21 +109,17 @@ button {
 <section class="box" id="login">
   <h2>LOGIN ADMIN</h2>
 
-  <input
-    type="email"
-    id="email"
+  <input id="email" type="email"
     placeholder="Email Admin"
-    autocomplete="username"
-  >
+    autocomplete="username">
 
-  <input
-    type="password"
-    id="password"
+  <input id="password" type="password"
     placeholder="Password"
-    autocomplete="current-password"
-  >
+    autocomplete="current-password">
 
-  <button onclick="loginAdmin()">MASUK</button>
+  <button id="tombolMasuk" onclick="loginAdmin()">
+    MASUK
+  </button>
 
   <p id="pesan"></p>
 </section>
@@ -124,7 +127,7 @@ button {
 <section id="dashboard" class="hidden">
 
   <div class="box">
-    <h2>Selamat Datang, Admin!</h2>
+    <h2>SELAMAT DATANG, ADMIN!</h2>
     <p id="namaAdmin">Admin Berkahshop</p>
     <button class="logout" onclick="logoutAdmin()">
       KELUAR
@@ -132,10 +135,9 @@ button {
   </div>
 
   <div class="box">
-    <h2>Statistik Marketplace</h2>
+    <h2>STATISTIK MARKETPLACE</h2>
 
     <div class="grid">
-
       <div class="stat">
         <h3>Penjual</h3>
         <h2 id="penjual">0</h2>
@@ -155,47 +157,61 @@ button {
         <h3>Pesanan</h3>
         <h2 id="pesanan">0</h2>
       </div>
-
     </div>
   </div>
 
   <div class="box">
-    <h2>Manajemen Berkahshop</h2>
-    <p>Dashboard utama berhasil dibuka.</p>
-    <p>Pengelolaan penjual, toko, produk, dan pesanan akan kita tambahkan bertahap.</p>
+    <h2>ADMINISTRASI BERKAHSHOP</h2>
+    <p>Login administrator berhasil.</p>
+    <p>Pengelolaan toko, produk, penjual dan pesanan akan dikembangkan berikutnya.</p>
   </div>
 
 </section>
-
 </div>
 
 <script>
-const SUPABASE_URL = "https://cauhaaqyriklxlofqsvc.supabase.co/rest/v1/L";
-const SUPABASE_KEY = "sb_publishable_zEWRBwZiW5G-7CDrjfqDPQ_kAtJthh0";
+const SUPABASE_URL = "MASUKKAN_PROJECT_URL";
+const SUPABASE_KEY = "MASUKKAN_PUBLISHABLE_KEY";
 
 const db = window.supabase.createClient(
   SUPABASE_URL,
   SUPABASE_KEY
 );
 
+function tampilkanPesan(teks, sukses = false) {
+  const pesan = document.getElementById("pesan");
+  pesan.textContent = teks;
+  pesan.style.color = sukses ? "#087b50" : "#c62828";
+}
+
 async function loginAdmin() {
+  const tombol = document.getElementById("tombolMasuk");
   const email = document.getElementById("email").value.trim();
   const password = document.getElementById("password").value;
-  const pesan = document.getElementById("pesan");
 
-  pesan.textContent = "Memeriksa akun...";
-
-  const { data, error } = await db.auth.signInWithPassword({
-    email,
-    password
-  });
-
-  if (error) {
-    pesan.textContent = error.message;
+  if (!email || !password) {
+    tampilkanPesan("Masukkan email dan password.");
     return;
   }
 
-  await periksaAdmin(data.user);
+  tombol.disabled = true;
+  tampilkanPesan("Sedang menghubungkan ke Supabase...", true);
+
+  try {
+    const { data, error } = await db.auth.signInWithPassword({
+      email: email,
+      password: password
+    });
+
+    if (error) throw error;
+
+    await periksaAdmin(data.user);
+
+  } catch (error) {
+    tampilkanPesan("Gagal login: " + error.message);
+  } finally {
+    tombol.disabled = false;
+  }
 }
 
 async function periksaAdmin(user) {
@@ -205,11 +221,14 @@ async function periksaAdmin(user) {
     .eq("id", user.id)
     .single();
 
-  if (error || !data || data.role !== "admin") {
+  if (error) {
     await db.auth.signOut();
-    document.getElementById("pesan").textContent =
-      "Akun ini tidak memiliki akses Admin.";
-    return;
+    throw new Error("Gagal membaca profil: " + error.message);
+  }
+
+  if (data.role !== "admin") {
+    await db.auth.signOut();
+    throw new Error("Akun ini bukan Admin Berkahshop.");
   }
 
   document.getElementById("login").classList.add("hidden");
@@ -227,9 +246,7 @@ async function hitung(tabel, kolom, nilai) {
     head: true
   });
 
-  if (kolom) {
-    query = query.eq(kolom, nilai);
-  }
+  if (kolom) query = query.eq(kolom, nilai);
 
   const { count, error } = await query;
 
@@ -261,10 +278,19 @@ async function logoutAdmin() {
 }
 
 async function periksaSesi() {
-  const { data } = await db.auth.getSession();
+  const { data, error } = await db.auth.getSession();
+
+  if (error) {
+    tampilkanPesan(error.message);
+    return;
+  }
 
   if (data.session) {
-    await periksaAdmin(data.session.user);
+    try {
+      await periksaAdmin(data.session.user);
+    } catch (error) {
+      tampilkanPesan(error.message);
+    }
   }
 }
 
