@@ -185,9 +185,12 @@ const db = window.supabase.createClient(
 const loginBox = document.getElementById("login");
 const dashboard = document.getElementById("dashboard");
 const pesan = document.getElementById("pesan");
-const tombolMasuk = document.getElementById("tombolMasuk");
-tombolMasuk.addEventListener("click", async function() {
 
+const tombolMasuk = document.getElementById("tombolMasuk");
+
+tombolMasuk.addEventListener("click", async function() {
+    alert("TOMBOL MASUK BERFUNGSI!");
+});
 /* PESAN */
 
 function tampilkanPesan(teks, sukses = false) {
