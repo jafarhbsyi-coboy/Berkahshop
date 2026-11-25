@@ -187,10 +187,14 @@ const dashboard = document.getElementById("dashboard");
 const pesan = document.getElementById("pesan");
 
 const tombolMasuk = document.getElementById("tombolMasuk");
+/* TOMBOL */
 
-tombolMasuk.addEventListener("click", async function() {
-    alert("TOMBOL MASUK BERFUNGSI!");
-});
+tombolMasuk.addEventListener("click", loginAdmin);
+
+tampilkanPesan("JAVASCRIPT BERJALAN", true);
+
+document.getElementById("tombolKeluar")
+  .addEventListener("click", logoutAdmin);
 /* PESAN */
 
 function tampilkanPesan(teks, sukses = false) {
