@@ -1,4 +1,4 @@
- 
+
 <!DOCTYPE html>
 <html lang="id">
 <head>
@@ -58,15 +58,11 @@ button {
   cursor: pointer;
 }
 
-button:disabled {
-  opacity: .6;
-}
+button:disabled { opacity: .6; }
 
-.logout {
-  background: #c62828;
-}
+.logout { background: #c62828; }
 
-.hidden { display: none; }
+.hidden { display: none !important; }
 
 #pesan {
   margin-top: 15px;
@@ -101,23 +97,25 @@ button:disabled {
 
 <header>
   <h1>BERKAHSHOP</h1>
-  <p>Dashboard Administrator</p>
+  <p>Dashboard Administrator Marketplace</p>
 </header>
 
 <div class="container">
 
 <section class="box" id="login">
-  <h2>LOGIN ADMIN</h2>
+  <h2>LOGIN ADMIN BERKAHSHOP</h2>
 
+  <label>Email Admin</label>
   <input id="email" type="email"
-    placeholder="Email Admin"
+    placeholder="Masukkan email admin"
     autocomplete="username">
 
+  <label>Password</label>
   <input id="password" type="password"
-    placeholder="Password"
+    placeholder="Masukkan password"
     autocomplete="current-password">
 
-  <button id="tombolMasuk" onclick="loginAdmin()">
+  <button id="tombolMasuk" type="button">
     MASUK
   </button>
 
@@ -129,7 +127,7 @@ button:disabled {
   <div class="box">
     <h2>SELAMAT DATANG, ADMIN!</h2>
     <p id="namaAdmin">Admin Berkahshop</p>
-    <button class="logout" onclick="logoutAdmin()">
+    <button class="logout" id="tombolKeluar">
       KELUAR
     </button>
   </div>
@@ -138,57 +136,68 @@ button:disabled {
     <h2>STATISTIK MARKETPLACE</h2>
 
     <div class="grid">
+
       <div class="stat">
         <h3>Penjual</h3>
-        <h2 id="penjual">0</h2>
+        <h2 id="penjual">-</h2>
       </div>
 
       <div class="stat">
         <h3>Toko</h3>
-        <h2 id="toko">0</h2>
+        <h2 id="toko">-</h2>
       </div>
 
       <div class="stat">
         <h3>Produk</h3>
-        <h2 id="produk">0</h2>
+        <h2 id="produk">-</h2>
       </div>
 
       <div class="stat">
         <h3>Pesanan</h3>
-        <h2 id="pesanan">0</h2>
+        <h2 id="pesanan">-</h2>
       </div>
+
     </div>
   </div>
 
-  <div class="box">
-    <h2>ADMINISTRASI BERKAHSHOP</h2>
-    <p>Login administrator berhasil.</p>
-    <p>Pengelolaan toko, produk, penjual dan pesanan akan dikembangkan berikutnya.</p>
-  </div>
-
 </section>
+
 </div>
 
 <script>
-const SUPABASE_URL = "https://cauhaaqyriklxlofqsvc.supabase.co";
-const SUPABASE_KEY = "sb_publishable_zEWRBwZiW5G-7CDrjfqDPQ_kAtJthh0";
+"use strict";
+
+/* KONEKSI SUPABASE */
+
+const SUPABASE_URL =
+  "https://cauhaaqyriklxlofqsvc.supabase.co";
+
+const SUPABASE_KEY =
+  "sb_publishable_zEWRBwZiW5G-7CDrjfqDPQ_kAtJthh0";
 
 const db = window.supabase.createClient(
   SUPABASE_URL,
   SUPABASE_KEY
 );
-console.log("DB BERHASIL DIBUAT:", db);
+
+/* ELEMEN HALAMAN */
+
+const loginBox = document.getElementById("login");
+const dashboard = document.getElementById("dashboard");
+const pesan = document.getElementById("pesan");
+const tombolMasuk = document.getElementById("tombolMasuk");
+
+/* PESAN */
+
 function tampilkanPesan(teks, sukses = false) {
-  const pesan = document.getElementById("pesan");
   pesan.textContent = teks;
   pesan.style.color = sukses ? "#087b50" : "#c62828";
 }
-async function loginAdmin() {
-  // kode login
-}
-</script>
 
- document.getElementById("tombolMasuk");
+/* LOGIN ADMIN */
+
+async function loginAdmin() {
+
   const email = document.getElementById("email").value.trim();
   const password = document.getElementById("password").value;
 
@@ -197,10 +206,11 @@ async function loginAdmin() {
     return;
   }
 
-  tombol.disabled = true;
+  tombolMasuk.disabled = true;
   tampilkanPesan("Sedang menghubungkan ke Supabase...", true);
 
   try {
+
     const { data, error } = await db.auth.signInWithPassword({
       email: email,
       password: password
@@ -208,16 +218,27 @@ async function loginAdmin() {
 
     if (error) throw error;
 
+    if (!data.user) {
+      throw new Error("Data akun tidak ditemukan.");
+    }
+
     await periksaAdmin(data.user);
 
   } catch (error) {
+
     tampilkanPesan("Gagal login: " + error.message);
+
   } finally {
-    tombol.disabled = false;
+
+    tombolMasuk.disabled = false;
+
   }
 }
 
+/* PEMERIKSAAN ADMIN */
+
 async function periksaAdmin(user) {
+
   const { data, error } = await db
     .from("profiles")
     .select("nama, role")
@@ -229,13 +250,13 @@ async function periksaAdmin(user) {
     throw new Error("Gagal membaca profil: " + error.message);
   }
 
-  if (data.role !== "admin") {
+  if (!data || data.role !== "admin") {
     await db.auth.signOut();
-    throw new Error("Akun ini bukan Admin Berkahshop.");
+    throw new Error("Akun ini belum memiliki role admin.");
   }
 
-  document.getElementById("login").classList.add("hidden");
-  document.getElementById("dashboard").classList.remove("hidden");
+  loginBox.classList.add("hidden");
+  dashboard.classList.remove("hidden");
 
   document.getElementById("namaAdmin").textContent =
     data.nama || "Admin Berkahshop";
@@ -243,25 +264,33 @@ async function periksaAdmin(user) {
   await muatStatistik();
 }
 
+/* MENGHITUNG DATA */
+
 async function hitung(tabel, kolom, nilai) {
+
   let query = db.from(tabel).select("*", {
     count: "exact",
     head: true
   });
 
-  if (kolom) query = query.eq(kolom, nilai);
+  if (kolom) {
+    query = query.eq(kolom, nilai);
+  }
 
   const { count, error } = await query;
 
   if (error) {
-    console.error(error);
+    console.error("Statistik " + tabel + ":", error.message);
     return "-";
   }
 
   return count;
 }
 
+/* STATISTIK */
+
 async function muatStatistik() {
+
   document.getElementById("penjual").textContent =
     await hitung("profiles", "role", "seller");
 
@@ -275,31 +304,64 @@ async function muatStatistik() {
     await hitung("orders");
 }
 
-async function logoutAdmin() {
-  await db.auth.signOut();
-  location.reload();
-}
+/* LOGOUT */
 
-async function periksaSesi() {
-  const { data, error } = await db.auth.getSession();
+async function logoutAdmin() {
+
+  const { error } = await db.auth.signOut();
 
   if (error) {
     tampilkanPesan(error.message);
     return;
   }
 
-  if (data.session) {
-    try {
+  location.reload();
+}
+
+/* PERIKSA SESI LOGIN */
+
+async function periksaSesi() {
+
+  try {
+
+    const { data, error } = await db.auth.getSession();
+
+    if (error) throw error;
+
+    if (data.session) {
       await periksaAdmin(data.session.user);
-    } catch (error) {
-      tampilkanPesan(error.message);
     }
+
+  } catch (error) {
+
+    dashboard.classList.add("hidden");
+    loginBox.classList.remove("hidden");
+    tampilkanPesan(error.message);
+
   }
 }
 
+/* TOMBOL */
+
+tombolMasuk.addEventListener("click", loginAdmin);
+
+document.getElementById("tombolKeluar")
+  .addEventListener("click", logoutAdmin);
+
+/* ENTER UNTUK LOGIN */
+
+document.getElementById("password")
+  .addEventListener("keydown", function(event) {
+    if (event.key === "Enter") {
+      loginAdmin();
+    }
+  });
+
+/* MULAI */
+
 periksaSesi();
+
 </script>
 
 </body>
 </html>
- 
