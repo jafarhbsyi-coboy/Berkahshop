@@ -374,6 +374,36 @@ periksaSesi();
 alert("TES JAVASCRIPT BERHASIL");
 </script>
 
+document.getElementById("formLogin").addEventListener("submit", async function(event) {
+  event.preventDefault();
+
+  const email = document.getElementById("email").value.trim();
+  const password = document.getElementById("password").value;
+  const pesan = document.getElementById("pesan");
+  const tombol = document.getElementById("tombolMasuk");
+
+  tombol.disabled = true;
+  pesan.textContent = "Sedang menghubungkan ke Supabase...";
+
+  try {
+    const { data, error } = await db.auth.signInWithPassword({
+      email: email,
+      password: password
+    });
+
+    if (error) throw error;
+
+    pesan.style.color = "green";
+    pesan.textContent = "LOGIN BERHASIL! " + data.user.email;
+
+  } catch (error) {
+    pesan.style.color = "red";
+    pesan.textContent = "GAGAL LOGIN: " + error.message;
+  }
+
+  tombol.disabled = false;
+});
+
 </body>
 </html>
   
